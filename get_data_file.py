@@ -39,6 +39,11 @@ def filer_segment_data(xbrl_files):
 def xbrl_to_db(xbrl_list):
     df = pd.DataFrame(xbrl_list)
     df = df.drop(columns='name')
+    df = df.rename(columns={'context_ref': 'context', 'unit_ref': 'unit'})
+
+    # TODO: parse dates from context_ref
+
+    # TODO: turn context into a readable string
 
     return df
 
@@ -53,7 +58,7 @@ def main():
 
     # fill pandas with the segment data
     segment_df = xbrl_to_db(xbrl_files[0])
-    print(segment_df)
+    print(segment_df.describe())
 
 
 if __name__ == '__main__':
