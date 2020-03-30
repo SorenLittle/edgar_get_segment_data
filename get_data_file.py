@@ -30,8 +30,17 @@ def get_xbrl(company):
 
 
 def filer_segment_data(xbrl_files):
+    # filter for correct tag
     segment_xbrl = [elem for elem in xbrl_files if
                     elem.get('name') == 'Revenue From Contract With Customer Excluding Assessed Tax']
+
+    # filter for more info than just the year: "FD2017Q4YTD" gets dropped
+    segment_xbrl = [elem for elem in xbrl_files if len(elem.get('context_ref')) > 11]
+
+    # filter for context that contains "Segment" or "ProductOrService"
+    segment_xbrl = [elem for elem in xbrl_files if
+                    elem.get('context_ref').find('Segment') != -1 or
+                    elem.get('context_ref').find('ProductOrService') != -1]
 
     return segment_xbrl
 
@@ -41,9 +50,12 @@ def xbrl_to_db(xbrl_list):
     df = df.drop(columns='name')
     df = df.rename(columns={'context_ref': 'context', 'unit_ref': 'unit'})
 
-    # TODO: parse dates from context_ref
-
     # TODO: turn context into a readable string
+
+    for index, row in df.iterrows():
+        print(row['context'])
+
+    # TODO: parse dates from context_ref
 
     return df
 
