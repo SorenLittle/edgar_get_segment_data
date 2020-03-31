@@ -11,15 +11,6 @@ from xbrl import (
     XBRLElement
 )
 
-import numpy as np
-
-desired_width = 320
-pd.set_option('display.width', desired_width)
-np.set_printoptions(linewidth=desired_width)
-pd.set_option('display.max_columns', 10)
-
-from pprint import pprint
-
 
 def get_xbrl(company):
     # gets data files from a given Company instance and returns the parse xbrl
@@ -28,7 +19,7 @@ def get_xbrl(company):
 
     xbrl_files = [XBRLElement(file).to_dict() for file in xbrl.relevant_children_parsed]
 
-    segment_xbrl = filer_segment_data(xbrl_files)
+    segment_xbrl = filter_segment_data(xbrl_files)
     for elem in segment_xbrl:
         elem['company'] = company.name
         elem['cik'] = company.cik
@@ -36,16 +27,16 @@ def get_xbrl(company):
     return segment_xbrl
 
 
-def filer_segment_data(xbrl_files):
+def filter_segment_data(xbrl_files):
     # filter for correct tag
     segment_xbrl = [elem for elem in xbrl_files if
                     elem.get('name') == 'Revenue From Contract With Customer Excluding Assessed Tax']
 
     # filter for more info than just the year: "FD2017Q4YTD" gets dropped
-    segment_xbrl = [elem for elem in xbrl_files if len(elem.get('context_ref')) > 11]
+    segment_xbrl = [elem for elem in segment_xbrl if len(elem.get('context_ref')) > 11]
 
     # filter for context that contains "Segment" or "ProductOrService"
-    segment_xbrl = [elem for elem in xbrl_files if
+    segment_xbrl = [elem for elem in segment_xbrl if
                     elem.get('context_ref').find('Segment') != -1 or
                     elem.get('context_ref').find('ProductOrService') != -1]
 
@@ -82,7 +73,6 @@ def main():
 
     # iterate through the companies, calling the get_xbrl function on each
     xbrl_files = [get_xbrl(Company(pair[0], pair[1])) for pair in company_list]
-    # pprint(xbrl_files)
 
     # fill pandas with the segment data
     segment_df = xbrl_to_df(xbrl_files[0])
