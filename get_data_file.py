@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 from edgar import (
     Company,
@@ -76,8 +77,8 @@ def main():
 
     # fill pandas with the segment data
     segment_df = xbrl_to_df(xbrl_files[0])
-    print(segment_df.describe())
-    print(segment_df.head())
+
+    segment_df.to_csv(Path.cwd() / 'SegmentData.csv', index=False)
 
 
 if __name__ == '__main__':
