@@ -11,6 +11,13 @@ from xbrl import (
     XBRLElement
 )
 
+import numpy as np
+
+desired_width = 320
+pd.set_option('display.width', desired_width)
+np.set_printoptions(linewidth=desired_width)
+pd.set_option('display.max_columns', 10)
+
 from pprint import pprint
 
 
@@ -45,17 +52,26 @@ def filer_segment_data(xbrl_files):
     return segment_xbrl
 
 
-def xbrl_to_db(xbrl_list):
+def xbrl_to_df(xbrl_list):
     df = pd.DataFrame(xbrl_list)
     df = df.drop(columns='name')
-    df = df.rename(columns={'context_ref': 'context', 'unit_ref': 'unit'})
-
-    # TODO: turn context into a readable string
+    df = df.rename(columns={'unit_ref': 'unit'})
+    df['context'] = None
+    df['prefix'] = None
+    df['year'] = None
+    df['quarters'] = None
 
     for index, row in df.iterrows():
-        print(row['context'])
+        split_context = row['context_ref'].split('_')
 
-    # TODO: parse dates from context_ref
+        row['context'] = ' '.join(split_context[1:])
+
+        # parse the dates
+        row['prefix'] = split_context[0][0:2]
+        row['year'] = split_context[0][2:6]
+        row['quarters'] = split_context[0][6:]
+
+    df = df.drop(columns='context_ref')
 
     return df
 
@@ -66,11 +82,12 @@ def main():
 
     # iterate through the companies, calling the get_xbrl function on each
     xbrl_files = [get_xbrl(Company(pair[0], pair[1])) for pair in company_list]
-    pprint(xbrl_files)
+    # pprint(xbrl_files)
 
     # fill pandas with the segment data
-    segment_df = xbrl_to_db(xbrl_files[0])
+    segment_df = xbrl_to_df(xbrl_files[0])
     print(segment_df.describe())
+    print(segment_df.head())
 
 
 if __name__ == '__main__':
